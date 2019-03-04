@@ -23,7 +23,6 @@ def parse_json(json_path):
 
         images = [(image["file_name"], 1) for image in data["images"]]
 
-        print("总共有{}张限制品图片".format(len(images)))
         for ind, annotation in enumerate(data["annotations"]):
             image_id = annotation["image_id"]
             category_id = annotation["category_id"] - 1
@@ -49,8 +48,6 @@ class TrainDataset(Dataset):
         # images_norm, labels_norm = load_normal_images()
         # self.images = np.concatenate((images_res, images_norm), axis=0)
         # self.labels = np.concatenate((labels_res, labels_norm), axis=0)
-
-        print("Loading {} images to train".format(len(self.images)))
 
         if transform:
             self.composed = transform
@@ -101,13 +98,13 @@ class TestDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, index):
-        image_name,mark = self.images[index]
+        image_name, mark = self.images[index]
         img = Image.open(os.path.join(config.TEST_PATH, image_name))
         img = self.composed(img)
         return img, image_name
 
 
-def load_split_train_val(val_portion=.2):
+def load_split_train_val(batch_size, val_portion=.2):
     train_dataset = TrainDataset(config.TRAIN_NO_POLY_JSON_PATH, )
     val_dataset = TrainDataset(config.TRAIN_NO_POLY_JSON_PATH, )
 
@@ -120,8 +117,11 @@ def load_split_train_val(val_portion=.2):
     train_sampler = SubsetRandomSampler(train_idx)
     val_sampler = SubsetRandomSampler(val_idx)
 
-    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, sampler=train_sampler)
-    val_loader = DataLoader(val_dataset, batch_size=config.batch_size, sampler=val_sampler)
+    print("Loading {} images to train".format(len(train_idx)))
+    print("Loading {} images to validation".format(len(val_idx)))
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, sampler=val_sampler)
 
     return {'train': train_loader, 'val': val_loader}
 
@@ -129,6 +129,6 @@ def load_split_train_val(val_portion=.2):
 if __name__ == '__main__':
     # loader = load_split_train_val(val_portion=0.2)
     # print(len(loader[0]) * 8)
-    data=TestDataset()
+    data = TestDataset()
     for a in data:
         print(a)

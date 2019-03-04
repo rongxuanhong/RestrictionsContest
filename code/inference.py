@@ -31,17 +31,20 @@ def write_submit_result(preds, image_names):
         json.dump(data, f)
 
 
-def inference():
+def inference(args):
     # build model
+    batch_size = args.bs
+
     model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
     model = model.to(device)
 
     # load model
-    a = torch.load(os.path.join(config.BEST_MODEL_PATH, 'best_model_2019-03-04 09:47:02.401115.pt'))
+    best_model_file = os.listdir(config.BEST_MODEL_PATH)[-1].split('.')[0]  # 默认取最近时间的一个
+    a = torch.load(os.path.join(config.BEST_MODEL_PATH, best_model_file))
     model.load_state_dict(a)
     model.eval()
     # load data
-    test_loader = DataLoader(TestDataset(), batch_size=config.batch_size)
+    test_loader = DataLoader(TestDataset(), batch_size=batch_size)
 
     preds = []
     image_names = []
@@ -62,16 +65,15 @@ def inference():
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description='Tianchi Jinnan ')
-    #
-    # parser.add_argument('--workspace', type=str, required=True)
-    # parser.add_argument('--cuda', action='store_true', default=False)
-    #
-    # args = parser.parse_args()
-    #
-    # args.filename = get_filename(__file__)
-    #
-    # # Create log
-    # create_logging("../logs", "w")
-    # logging.info(args)
-    inference()
+    parser = argparse.ArgumentParser(description='Tianchi Jinnan ')
+
+    parser.add_argument('--bs', dest='batch_size', type=int, required=True, default=8)
+
+    args = parser.parse_args()
+
+    args.filename = get_filename(__file__)
+
+    # Create log
+    create_logging("../logs", "w")
+    logging.info(args)
+    inference(args)

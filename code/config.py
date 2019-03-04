@@ -20,6 +20,6 @@ img_height = 224
 
 seed = 2019
 
-batch_size = 1
+# batch_size = 8
 
 gpus = '0'

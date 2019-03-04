@@ -79,7 +79,10 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
             total = len(dataloaders[phase]) * config.batch_size
             epoch_loss = running_loss / total
 
-            logging.info('{} Loss: {:.4f} mAP: {:.4f} mAUC:{}'.format(phase, epoch_loss, mAP, roc_auc))
+            if phase == "train":
+                logging.info('train_loss: {:.4f} train_mAP: {:.4f} train_mAUC: {:.4f}'.format(epoch_loss, mAP, roc_auc))
+            else:
+                logging.info('val_loss: {:.4f} val_mAP: {:.4f} val_mAUC: {:.4f}'.format(epoch_loss, mAP, roc_auc))
 
             if phase == 'val' and mAP > best_acc:
                 best_acc = mAP
@@ -97,66 +100,71 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
     return model
 
 
-def visualize_model(model, dataloaders, num_images=6):
-    was_training = model.training
-    model.eval()
-    images_so_far = 0
-    with torch.no_grad():
-        for i, (images, labels) in enumerate(dataloaders['val']):
-            images = images.to(device)
-            outputs = model(images)
-            preds = torch.sigmoid(outputs)
-            preds = torch.nonzero((preds > 0.5).float() * outputs).squeeze()
+# def visualize_model(model, dataloaders, num_images=6):
+#     was_training = model.training
+#     model.eval()
+#     images_so_far = 0
+#     with torch.no_grad():
+#         for i, (images, labels) in enumerate(dataloaders['val']):
+#             images = images.to(device)
+#             outputs = model(images)
+#             preds = torch.sigmoid(outputs)
+#             preds = torch.nonzero((preds > 0.5).float() * outputs).squeeze()
+#
+#             for j in range(images.size(0)):
+#                 images_so_far += 1
+#                 ax = plt.subplot(num_images // 2, 2, images_so_far)
+#                 ax.axis('off')
+#                 str = ''
+#                 preds = preds.cpu().numpy()
+#                 for index, val in enumerate(preds):
+#                     str += config.ind_to_label[val]
+#                     if index < len(preds) - 1:
+#                         str += ","
+#                 ax.set_title("predicted:{}".format(str))
+#                 plt.imshow(images.cpu().data[j])
+#
+#                 if images_so_far == num_images:
+#                     model.training(was_training)
+#                     return
+#         model.training(was_training)
 
-            for j in range(images.size(0)):
-                images_so_far += 1
-                ax = plt.subplot(num_images // 2, 2, images_so_far)
-                ax.axis('off')
-                str = ''
-                preds = preds.cpu().numpy()
-                for index, val in enumerate(preds):
-                    str += config.ind_to_label[val]
-                    if index < len(preds) - 1:
-                        str += ","
-                ax.set_title("predicted:{}".format(str))
-                plt.imshow(images.cpu().data[j])
 
-                if images_so_far == num_images:
-                    model.training(was_training)
-                    return
-        model.training(was_training)
+def train(args):
+    lr = args.lr
+    batch_size = args.bs
+    epochs = args.epochs
 
-
-def train():
     model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
 
     model = model.to(device)
 
     criterion = nn.BCEWithLogitsLoss()
 
-    optimizer_fit = optim.Adam(model.parameters(), lr=1e-3, )
+    optimizer_fit = optim.Adam(model.parameters(), lr=lr, )
 
     exp_lr_schedule = lr_scheduler.StepLR(optimizer_fit, step_size=1, gamma=0.95)
 
-    dataloaders = load_split_train_val()
+    dataloaders = load_split_train_val(batch_size)
 
-    model_fit = train_model(model, dataloaders, criterion, optimizer_fit, exp_lr_schedule, num_epochs=1)
+    model_fit = train_model(model, dataloaders, criterion, optimizer_fit, exp_lr_schedule, num_epochs=epochs)
 
     # visualize_model(model_fit, dataloaders=dataloaders)
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description='Tianchi Jinnan ')
-    #
-    # parser.add_argument('--workspace', type=str, required=True)
-    # parser.add_argument('--cuda', action='store_true', default=False)
-    #
-    # args = parser.parse_args()
-    #
-    # args.filename = get_filename(__file__)
-    #
+    parser = argparse.ArgumentParser(description='Tianchi Jinnan ')
+
+    parser.add_argument('--bs', dest='batch_size', type=int, required=True, default=8)
+    parser.add_argument('--lr', dest='learning_rate', type=int, required=True, default=1e-3)
+    parser.add_argument('--epoch', dest='epochs', type=int, required=True, default=20)
+
+    args = parser.parse_args()
+
+    args.filename = get_filename(__file__)
+
     # # Create log
     create_logging("../logs", "w")
-    # logging.info(args)
+    logging.info(args)
 
-    train()
+    train(args)

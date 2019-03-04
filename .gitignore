@@ -4,3 +4,4 @@ code/__pychche__
 code/best_model/*
 data/first_round_data/*
 logs
+.idea
