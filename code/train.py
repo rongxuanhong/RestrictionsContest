@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, average_precision_score
 import logging
 import argparse
+from models.darknet import darknet
 
 # 1. set random.seed and cudnn performance
 random.seed(config.seed)
@@ -28,7 +29,7 @@ warnings.filterwarnings('ignore')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, args, dataloaders, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -76,7 +77,7 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
             roc_auc = roc_auc_score(y_trues.detach().cpu().numpy(), y_preds.detach().cpu().numpy())
             mAP = average_precision_score(y_trues.detach().cpu().numpy(), y_preds.detach().cpu().numpy())
 
-            total = len(dataloaders[phase]) * config.batch_size
+            total = len(dataloaders[phase]) * args.batch_size
             epoch_loss = running_loss / total
 
             if phase == "train":
@@ -131,11 +132,13 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
 
 
 def train(args):
-    lr = args.lr
-    batch_size = args.bs
+    batch_size = args.batch_size
+    lr = args.learning_rate
     epochs = args.epochs
 
-    model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
+    # model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
+
+    model = darknet(num_classes=5)
 
     model = model.to(device)
 
@@ -147,7 +150,7 @@ def train(args):
 
     dataloaders = load_split_train_val(batch_size)
 
-    model_fit = train_model(model, dataloaders, criterion, optimizer_fit, exp_lr_schedule, num_epochs=epochs)
+    model_fit = train_model(model, args, dataloaders, criterion, optimizer_fit, exp_lr_schedule, num_epochs=epochs)
 
     # visualize_model(model_fit, dataloaders=dataloaders)
 
@@ -155,9 +158,9 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tianchi Jinnan ')
 
-    parser.add_argument('--bs', dest='batch_size', type=int, required=True, default=8)
-    parser.add_argument('--lr', dest='learning_rate', type=int, required=True, default=1e-3)
-    parser.add_argument('--epoch', dest='epochs', type=int, required=True, default=20)
+    parser.add_argument('--batch_size', type=int, required=True, default=8)
+    parser.add_argument('--learning_rate', type=float, required=True, default=1e-3)
+    parser.add_argument('--epochs', type=int, required=True, default=20)
 
     args = parser.parse_args()
 

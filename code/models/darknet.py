@@ -2,16 +2,18 @@ import torch.nn as nn
 import torchvision.models as m
 import math
 
+m.resnet18()
+
 
 class DarkNet(nn.Module):
     def __init__(self, module_list, num_classes, init_weights=True):
         super(DarkNet, self).__init__()
         self.module_list = module_list
         self.classifier = nn.Sequential(
-            nn.Conv2d(1024, num_classes, 1, 1, 0),
+            nn.Conv2d(512, num_classes, 1, 1, 0),
             nn.BatchNorm2d(num_classes),
             nn.ReLU(True),
-            nn.AvgPool2d(7, 1),
+            nn.AvgPool2d(2, 1),
 
         )
         if init_weights:
@@ -21,7 +23,7 @@ class DarkNet(nn.Module):
         for module in self.module_list:
             x = module(x)
         x = self.classifier(x)
-        return x
+        return x.squeeze()
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -43,7 +45,7 @@ def _conv2d_bn_relu(in_channels, filters, kernel_size, stride, padding):
         nn.Conv2d(in_channels, filters, kernel_size, stride, padding, bias=False),
         nn.BatchNorm2d(filters),
         nn.ReLU(True),
-        nn.Dropout(),
+        # nn.Dropout(),
     )
 
 
@@ -78,11 +80,11 @@ def _make_module_list():
     modules.append(_conv2d_bn_relu(256, 512, 3, 1, 1))
     modules.append(_maxpool())
 
-    modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
-    modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
-    modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
-    modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
-    modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
+    # modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
+    # modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
+    # modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
+    # modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
+    # modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
     modules.append(_maxpool())
 
     return modules
@@ -107,9 +109,13 @@ def get_number_of_param(model):
 
 
 def test_net():
-    model = darknet(5)
-    get_number_of_param(model)
+    import torch
+    x = torch.randn((1, 3, 224, 224))
+    model = darknet(5)(x)
+    # get_number_of_param(model)
 
 
 if __name__ == '__main__':
-    test_net()
+    # test_net()
+    model=m.resnet18(pretrained=False)
+    get_number_of_param(model)

@@ -1,12 +1,12 @@
-NORMAL_PATH = "../data/first_round_data/jinnan2_round1_train_20190222/normal"
+NORMAL_PATH = "data/first_round_data/jinnan2_round1_train_20190222/normal"
 
-RESTRICTED_PATH = "../data/first_round_data/jinnan2_round1_train_20190222/restricted"
+RESTRICTED_PATH = "data/first_round_data/jinnan2_round1_train_20190222/restricted"
 
-TEST_PATH = "../data/first_round_data/jinnan2_round1_test_a_20190222"
+TEST_PATH = "data/first_round_data/jinnan2_round1_test_a_20190222"
 
-TRAIN_NO_POLY_JSON_PATH = "../data/first_round_data/jinnan2_round1_train_20190222/train_no_poly.json"
+TRAIN_NO_POLY_JSON_PATH = "data/first_round_data/jinnan2_round1_train_20190222/train_no_poly.json"
 
-SUBMIT_PATH = '../submit'
+SUBMIT_PATH = 'submit'
 
 BEST_MODEL_PATH = 'best_model'
 

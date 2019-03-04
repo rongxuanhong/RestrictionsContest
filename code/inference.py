@@ -67,7 +67,7 @@ def inference(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tianchi Jinnan ')
 
-    parser.add_argument('--bs', dest='batch_size', type=int, required=True, default=8)
+    parser.add_argument('--batch_size', type=int, required=True, default=8)
 
     args = parser.parse_args()
 
