@@ -8,7 +8,7 @@ TRAIN_NO_POLY_JSON_PATH = "data/first_round_data/jinnan2_round1_train_20190222/t
 
 SUBMIT_PATH = 'submit'
 
-BEST_MODEL_PATH = 'best_model'
+BEST_MODEL_PATH = 'code/best_model'
 
 labels = ["铁壳打火机", "黑钉打火机", "刀具", "电池电容", "剪刀", ]
 

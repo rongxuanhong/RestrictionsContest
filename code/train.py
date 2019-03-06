@@ -97,7 +97,7 @@ def train_model(model, args, dataloaders, criterion, optimizer, scheduler, num_e
     model.load_state_dict(best_model_wts)
 
     torch.save(model.state_dict(),
-               os.path.join('best_model', 'best_model_' + str(datetime.now()) + '.pt'))
+               os.path.join(config.BEST_MODEL_PATH, 'best_model_' + str(datetime.now()) + '.pt'))
     return model
 
 
@@ -136,9 +136,9 @@ def train(args):
     lr = args.learning_rate
     epochs = args.epochs
 
-    # model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
+    model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
 
-    model = darknet(num_classes=5)
+    # model = darknet(num_classes=5)
 
     model = model.to(device)
 

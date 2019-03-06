@@ -52,3 +52,17 @@ def create_logging(log_dir, filemode):
     logging.getLogger('').addHandler(console)
 
     return logging
+
+
+def get_number_of_param(model):
+    """get the number of param for every element"""
+    count = 0
+    for param in model.parameters():
+        param_size = param.size()
+        count_of_one_param = 1
+        for dis in param_size:
+            count_of_one_param *= dis
+        print(param.size(), count_of_one_param)
+        count += count_of_one_param
+        print(count)
+    print('total number of the model is %d' % count)

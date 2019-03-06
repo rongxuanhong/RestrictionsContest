@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torchvision.models as m
 import math
+from utils.utils import *
 
 m.resnet18()
 
@@ -10,10 +11,10 @@ class DarkNet(nn.Module):
         super(DarkNet, self).__init__()
         self.module_list = module_list
         self.classifier = nn.Sequential(
-            nn.Conv2d(512, num_classes, 1, 1, 0),
+            nn.Conv2d(1024, num_classes, 1, 1, 0),
             nn.BatchNorm2d(num_classes),
             nn.ReLU(True),
-            nn.AvgPool2d(2, 1),
+            nn.AvgPool2d(7, 1),
 
         )
         if init_weights:
@@ -22,6 +23,7 @@ class DarkNet(nn.Module):
     def forward(self, x):
         for module in self.module_list:
             x = module(x)
+        print(x.shape)
         x = self.classifier(x)
         return x.squeeze()
 
@@ -44,7 +46,7 @@ def _conv2d_bn_relu(in_channels, filters, kernel_size, stride, padding):
     return nn.Sequential(
         nn.Conv2d(in_channels, filters, kernel_size, stride, padding, bias=False),
         nn.BatchNorm2d(filters),
-        nn.ReLU(True),
+        nn.LeakyReLU(0.1, inplace=True),
         # nn.Dropout(),
     )
 
@@ -80,12 +82,11 @@ def _make_module_list():
     modules.append(_conv2d_bn_relu(256, 512, 3, 1, 1))
     modules.append(_maxpool())
 
-    # modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
-    # modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
-    # modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
-    # modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
-    # modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
-    modules.append(_maxpool())
+    modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
+    modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
+    modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
+    modules.append(_conv2d_bn_relu(1024, 512, 3, 1, 0))
+    modules.append(_conv2d_bn_relu(512, 1024, 3, 1, 1))
 
     return modules
 
@@ -94,28 +95,12 @@ def darknet(num_classes, init_weights=True):
     return DarkNet(_make_module_list(), num_classes=num_classes, init_weights=init_weights)
 
 
-def get_number_of_param(model):
-    """get the number of param for every element"""
-    count = 0
-    for param in model.parameters():
-        param_size = param.size()
-        count_of_one_param = 1
-        for dis in param_size:
-            count_of_one_param *= dis
-        print(param.size(), count_of_one_param)
-        count += count_of_one_param
-        print(count)
-    print('total number of the model is %d' % count)
-
-
 def test_net():
     import torch
     x = torch.randn((1, 3, 224, 224))
-    model = darknet(5)(x)
-    # get_number_of_param(model)
+    model = darknet(5)
+    get_number_of_param(model)
 
 
 if __name__ == '__main__':
-    # test_net()
-    model=m.resnet18(pretrained=False)
-    get_number_of_param(model)
+    test_net()

@@ -24,24 +24,26 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def write_submit_result(preds, image_names):
+    assert len(preds) == len(image_names)
     data = dict()
     for pred, image_name in zip(preds, image_names):
-        data[image_name] = {ind + 1: val for ind, val in enumerate(pred)}
-    with open(os.path.join(config.SUBMIT_PATH, 'first_round_test_submit'), 'w') as f:
+        data[image_name] = {str(ind + 1): round(float(val), 2) for ind, val in enumerate(pred)}  # np float=>>float(val)
+    with open(os.path.join(config.SUBMIT_PATH, 'first_round_test_submit.json'), 'w', encoding='utf-8') as f:
         json.dump(data, f)
+    print("write result success")
 
 
 def inference(args):
     # build model
-    batch_size = args.bs
+    batch_size = args.batch_size
 
     model = torchvision.models.resnet18(pretrained=False, num_classes=len(config.labels))
     model = model.to(device)
 
     # load model
-    best_model_file = os.listdir(config.BEST_MODEL_PATH)[-1].split('.')[0]  # 默认取最近时间的一个
-    a = torch.load(os.path.join(config.BEST_MODEL_PATH, best_model_file))
-    model.load_state_dict(a)
+    best_model_file = os.listdir(config.BEST_MODEL_PATH)[-1]  # 默认取最近时间的一个
+    print("Loading model from ", best_model_file)
+    model.load_state_dict(torch.load(os.path.join(config.BEST_MODEL_PATH, best_model_file)))
     model.eval()
     # load data
     test_loader = DataLoader(TestDataset(), batch_size=batch_size)
@@ -54,12 +56,11 @@ def inference(args):
         images = images.to(device)
         outputs = model(images)
         pred = torch.sigmoid(outputs)
-        preds.append(pred)
+        preds.append(pred.cpu().detach().numpy())
         image_names.append(image_name)
 
-    preds = torch.cat(preds)
-    image_names = torch.cat(image_names)
-
+    preds = np.concatenate(preds, axis=0)
+    image_names = np.concatenate(image_names, axis=0)
     # save final result
     write_submit_result(preds, image_names)
 
