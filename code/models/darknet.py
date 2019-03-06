@@ -101,7 +101,7 @@ def test_net():
     x = torch.randn((2, 3, 224, 224))
     model = darknet(5)
     model(x)
-    get_number_of_param(model)
+    # get_number_of_param(model)
 
 
 if __name__ == '__main__':
